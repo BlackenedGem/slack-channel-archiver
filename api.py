@@ -1,59 +1,83 @@
 import requests
 import sys
 import json
+from jsonschema import validate, ValidationError
 
 
 class Api:
-    # Constants
+    # region Constants
     URL_HISTORY_DM = "https://slack.com/api/im.history"
-    URL_USERS = "https://slack.com/api/users.info"
+    URL_USER_INFO = "https://slack.com/api/users.info"
+    SCHEMA_USER_INFO = {
+        "type": "object",
+        "properties": {
+            "user": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"}
+                },
+                "required": ["name"]
+            }
+        },
+        "required": ["user"]
+    }
+    # endregion
 
     token = None
 
     @classmethod
     def get_username(cls, user_id: str):
-        resonse = requests.get(cls.URL_USERS, {
-            'token': cls.token,
-            'user': user_id
-        })
+        response = cls.get_request(cls.URL_USER_INFO, {'user': user_id})
+        cls.validate_response(response, cls.SCHEMA_USER_INFO)
+        return response
+
+    # Validate JSON according to schema provided
+    @classmethod
+    def validate_response(cls, response: dict, schema: dict):
+        try:
+            validate(response, schema)
+        except ValidationError as e:
+            print("JSON retrieved is invalid")
+            print(e)
+            sys.exit(-1)
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
     @classmethod
     def get_request(cls, url: str, params: dict):
-        # Constant and vars
-        ERROR_MSG = f"Exception with GET request for URL: {url}"
+        # variables
+        error_msg = f"Exception with request"
         params['token'] = cls.token
 
         # Go through obvious failure points
         # noinspection PyBroadException
-        response = None
         try:
+            print(f"GET: {url}")
             response = requests.get(url, params)
         except requests.exceptions.RequestException as e:
-            print(ERROR_MSG)
+            print(error_msg)
             print(e)
             sys.exit(-1)
 
         if response.status_code != 200:
-            print(ERROR_MSG)
+            print(error_msg)
             print("Status code: " + response.status_code)
             sys.exit(-1)
 
         if response.text is None:
-            print(ERROR_MSG)
+            print(error_msg)
             print("Response is null")
             sys.exit(-1)
 
         resp_json = json.loads(response.text)
         if 'ok' not in resp_json or 'error' not in resp_json:
-            print(ERROR_MSG)
+            print(error_msg)
             print("Returned JSON was not in the correct format:")
             print(json.dumps(resp_json, indent=4))
             sys.exit(-1)
-
+        print(json.dumps(resp_json, indent=4))
         if not resp_json['ok']:
-            print(ERROR_MSG)
+            print(error_msg)
             print("Response gave 'false' signal for ok. Error provided: " + resp_json['error'])
 
         return resp_json

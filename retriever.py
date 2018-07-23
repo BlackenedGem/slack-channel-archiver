@@ -22,5 +22,4 @@ Switches.set_switches(args, parser)
 Api.token = args.token
 
 # Retrieve users
-
-Api.get_request(Api.URL_USERS, {})
+Api.get_request(Api.URL_USER_INFO, {})
