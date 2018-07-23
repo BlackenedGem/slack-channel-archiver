@@ -1,10 +1,7 @@
 import argparse
-import requests
 
 from switches import Switches
-
-# Constants
-API_HISTORY_DM = "https://slack.com/api/im.history"
+from api import Api
 
 # Setup argparse
 parser = argparse.ArgumentParser()
@@ -22,11 +19,8 @@ parser.add_argument('-de', '--date-end',
 # Process basic args
 args = parser.parse_args()
 Switches.set_switches(args, parser)
+Api.token = args.token
 
-# Get message history
-params = {
-    'token': args.token,
-    'channel': args.channel
-}
-response = requests.get(API_HISTORY_DM, params)
-print(response.content)
+# Retrieve users
+
+Api.get_request(Api.URL_USERS, {})
