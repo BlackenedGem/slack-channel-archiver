@@ -16,11 +16,16 @@ class Switches:
             cls.dateMode = cls.convert_enum(cls.dateModes, args['df'], "date format", parser)
 
     # Method to handle parsing switches properly
-    @staticmethod
-    def convert_enum(enum, string: str, switch_str: str, arg_parser: argparse.ArgumentParser):
+    @classmethod
+    def convert_enum(cls, enum, string: str, switch_str: str, arg_parser: argparse.ArgumentParser):
         try:
             return enum[string.upper()]
         except KeyError:
             # noinspection PyProtectedMember
             arg_parser.error(
-                "Could not interpret " + switch_str + ". Available options are: " + ', '.join(enum._member_names_))
+                "Could not interpret " + switch_str + ". Available options are: " + cls.list_enum(enum))
+
+    @classmethod
+    def list_enum(cls, enum):
+        # noinspection PyProtectedMember
+        return ', '.join(enum._member_names_)
