@@ -9,18 +9,22 @@ class Switches:
         UK = '%d/%m/%Y'
     dateMode = dateModes.ISO8601
     dateStart = None
-    dateEnd = None
+    dateEnd = datetime.date.today() + datetime.timedelta(days=1)
     # endregion
 
     # Set using arguments
     @classmethod
     def set_switches(cls, args: argparse.Namespace, parser: argparse.ArgumentParser):
+        # Dates
         if args.date_format is not None:
             cls.dateMode = cls.convert_enum(cls.dateModes, args.date_format, "date format", parser)
         if args.date_start is not None:
             cls.dateStart = cls.convert_date(args.date_start, parser)
         if args.date_end is not None:
             cls.dateEnd = cls.convert_date(args.date_end, parser)
+
+        if cls.dateStart > cls.dateEnd:
+            parser.error("Start date must be before end date")
 
     # Handle date parsing
     @classmethod

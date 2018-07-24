@@ -8,6 +8,28 @@ class Api:
     # region Constants
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_INFO = "https://slack.com/api/users.info"
+
+    # region Schemas
+    SCHEMA_HISTORY_DM = {
+        "type": "object",
+        "properties": {
+            "messages": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string"},
+                        "ts": {"type": "string"},
+                        "user": {"type": "string"},
+                        "text": {"type": "string"}
+                    },
+                    "required": ["type", "ts"]
+                }
+            }
+        },
+        "required": ["messages"]
+    }
+
     SCHEMA_USER_INFO = {
         "type": "object",
         "properties": {
@@ -27,6 +49,7 @@ class Api:
         },
         "required": ["user"]
     }
+    # endregion
     # endregion
 
     token = None

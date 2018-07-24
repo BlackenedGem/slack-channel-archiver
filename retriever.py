@@ -22,5 +22,12 @@ Switches.set_switches(args, parser)
 Api.token = args.token
 
 # Retrieve users
-Api.get_request(Api.URL_HISTORY_DM, {'channel': args.dm})
+params = {
+    'channel': args.dm,
+    'inclusive': True,
+    'latest': Switches.dateEnd.timestamp(),
+    'oldest': Switches.dateStart.timestamp(),
+    'count': 5
+}
+print(Api.get_request(Api.URL_HISTORY_DM, params, Api.SCHEMA_HISTORY_DM))
 
