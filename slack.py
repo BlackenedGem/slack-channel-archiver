@@ -11,7 +11,8 @@ class Slack:
     SUBTYPES_CUSTOM = ('me_message',
                        'file_comment',
                        'file_mention',
-                       'file_share')
+                       'file_share',
+                       'thread_broadcast')
 
     SUBTYPES_NO_PREFIX = ('pinned_item', )
 
@@ -44,7 +45,9 @@ class Slack:
         formatted_data = []
         for msg in messages:
             # Do not process thread child messages, they will either be processed by reply_broadcast or the parent message
-            if not ('thread_ts' in msg and msg['thread_ts'] != msg['ts']) or process_children:
+            if (not ('thread_ts' in msg and msg['thread_ts'] != msg['ts']))\
+                or ('subtype' in msg and msg['subtype'] == 'thread_broadcast')\
+                    or process_children:
                 formatted_data.append(self.format_message(msg))
 
         formatted_data = "".join(formatted_data)
@@ -73,18 +76,15 @@ class Slack:
             subtype = msg['subtype']
         username = self.get_username(msg)
 
-        # If not compact and message is new (and date has not changed), add a newline to the prefix
+        # user is new (and date has not changed), add a newline to the prefix
         if self.__last_user != username and prefix_str == "\n":
             prefix_str = "\n" + prefix_str
 
         # Do stuff based on the subtype
-        if subtype == 'thread_broadcast' and not self.process_channel_threads:
-            return ""
-
         if subtype in Slack.SUBTYPES_NO_PREFIX:
             body_str += self.format_msg_text(msg, include_ampersand=False)
         elif subtype in Slack.SUBTYPES_CUSTOM:
-            body_str += self.format_msg_custom_type(msg, subtype, username)
+            body_str = self.format_msg_custom_type(body_str, msg, subtype, username)
         else:
             # Standard message
             if self.__last_user != username:
@@ -114,8 +114,8 @@ class Slack:
 
         return ret_str
 
-    def format_msg_custom_type(self, msg, subtype, username):
-        ret = ""
+    def format_msg_custom_type(self, body_str, msg, subtype, username):
+        ret = body_str
 
         if subtype == 'me_message':
             if self.__last_user != username:
@@ -128,6 +128,7 @@ class Slack:
 
             ret += "\n" + Slack.INDENTATION_SHORT + "C: "
             ret += msg['comment']['comment']
+            ret += "\n"
 
         elif subtype == 'file_mention':
             ret += self.format_file_msg(msg, username, "mentioned")
@@ -143,14 +144,19 @@ class Slack:
                 if 'initial_comment' in msg['file']:
                     ret += " and commented on it\n"
                     ret += Slack.INDENTATION_SHORT + "C: " + msg['file']['initial_comment']['comment']
+                    ret += "\n"
             else:
                 ret += self.format_file_msg(msg, username, "shared")
 
-        elif subtype == 'reply_broadcast':
-            ret += username + " replied to a thread"
-            # if 'plain_text' in msg:
-            #    ret += ":\n" + export.INDENTATION + self.__improveMsgContents(msg['plain_text'])
-            ret += self.add_attachments(msg)
+        elif subtype == 'thread_broadcast':
+            if self.process_channel_threads:
+                # Standard message
+                if self.__last_user != username:
+                    ret = Slack.INDENTATION + username + ":\n" + ret
+
+                ret += self.format_msg_text(msg)
+            else:
+                ret += username + " replied to a thread:\n" + Slack.INDENTATION + self.format_msg_text(msg)
 
         return ret
 
@@ -211,7 +217,7 @@ class Slack:
 
         # Add text
         if 'text' in a:
-            body_str += self.improve_message_text(a['text'])
+            body_str += self.improve_message_text(a['text']) + "\n"
 
         # Add fields
         if 'fields' in a:
@@ -251,8 +257,8 @@ class Slack:
                 ret_str += self.format_attachment(a)
 
         # Last attachment should not add a newline, this is the easiest way to get rid of it
-        if ret_str.endswith("\n"):
-            ret_str = ret_str[:-1]
+        # if ret_str.endswith("\n"):
+        #    ret_str = ret_str[:-1]
 
         return ret_str
 
@@ -307,6 +313,7 @@ class Slack:
         # Strip thread_str of leading/trailing whitespace, and add extra indentation
         thread_str = thread_str.strip()
         thread_str = thread_str.replace("\n", "\n" + Slack.INDENTATION_SHORT + Slack.CHAR_PIPE + "  ")
+        thread_str += "\n"
 
         return thread_str
 
