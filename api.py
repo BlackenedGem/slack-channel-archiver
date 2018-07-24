@@ -1,13 +1,19 @@
+import datetime
+
 import requests
 import sys
 import json
 from jsonschema import validate, ValidationError
+
+from switches import Switches
 
 
 class Api:
     # region Constants
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_INFO = "https://slack.com/api/users.info"
+
+    REQUEST_COUNT = 2
 
     # region Schemas
     SCHEMA_HISTORY_DM = {
@@ -25,11 +31,11 @@ class Api:
                     },
                     "required": ["type", "ts"]
                 }
-            }
+            },
+            "has_more": {"type": "boolean"}
         },
-        "required": ["messages"]
+        "required": ["messages", "has_more"]
     }
-
     SCHEMA_USER_INFO = {
         "type": "object",
         "properties": {
@@ -58,6 +64,46 @@ class Api:
     def get_username(cls, user_id: str):
         response = cls.get_request(cls.URL_USER_INFO, {'user': user_id}, cls.SCHEMA_USER_INFO)
         return response['user']['profile']['display_name']
+
+    @classmethod
+    def get_dm_history(cls, dm, start_time: datetime, end_time: datetime):
+        print("Retrieving messages between " + cls.format_time(start_time) + " - " + cls.format_time(end_time))
+
+        params = {
+            'channel': dm,
+            'inclusive': True,
+            'oldest': start_time.timestamp(),
+            'latest': end_time.timestamp(),
+            'count': cls.REQUEST_COUNT
+        }
+
+        # Build up array repeatedly
+        messages = []
+
+        while True:
+            # Get next batch of messages
+            print(f"Querying slack for messages between {params['oldest']} - {params['latest']}")
+            content = cls.get_request(cls.URL_HISTORY_DM, params, cls.SCHEMA_HISTORY_DM)
+
+            next_messages = content['messages']
+            if len(next_messages) == 0:
+                break
+
+            # Make sure first/last messages don't overlap
+            if len(messages) > 0 and next_messages[0]['ts'] == messages[-1]['ts']:
+                messages.extend(next_messages[1:])
+            else:
+                messages.extend(next_messages)
+
+            # Update params and print status if there are more messages to get
+            if not content['has_more']:
+                print("Retrieved " + str(len(messages)) + " messages")
+                break
+
+            print("Messages retrieved so far: " + str(len(messages)))
+            params['latest'] = next_messages[-1]['ts']
+
+        return messages
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
@@ -107,3 +153,7 @@ class Api:
                 sys.exit(-1)
 
         return resp_json
+
+    @classmethod
+    def format_time(cls, time: datetime):
+        return datetime.datetime.strftime(time, Switches.dateMode.value)
