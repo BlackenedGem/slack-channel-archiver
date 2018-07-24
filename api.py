@@ -33,24 +33,13 @@ class Api:
 
     @classmethod
     def get_username(cls, user_id: str):
-        response = cls.get_request(cls.URL_USER_INFO, {'user': user_id})
-        cls.validate_response(response, cls.SCHEMA_USER_INFO)
+        response = cls.get_request(cls.URL_USER_INFO, {'user': user_id}, cls.SCHEMA_USER_INFO)
         return response['user']['profile']['display_name']
-
-    # Validate JSON according to schema provided
-    @classmethod
-    def validate_response(cls, response: dict, schema: dict):
-        try:
-            validate(response, schema)
-        except ValidationError as e:
-            print("JSON retrieved is invalid")
-            print(e)
-            sys.exit(-1)
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
     @classmethod
-    def get_request(cls, url: str, params: dict):
+    def get_request(cls, url: str, params: dict, schema: dict = None):
         # variables
         error_msg = f"Exception with request"
         params['token'] = cls.token
@@ -85,5 +74,13 @@ class Api:
         if not resp_json['ok']:
             print(error_msg)
             print("Response gave 'false' signal for ok. Error provided: " + resp_json['error'])
+
+        if schema is not None:
+            try:
+                validate(resp_json, schema)
+            except ValidationError as e:
+                print(error_msg)
+                print(e)
+                sys.exit(-1)
 
         return resp_json
