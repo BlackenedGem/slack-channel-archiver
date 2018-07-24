@@ -15,11 +15,11 @@ class Switches:
     # Set using arguments
     @classmethod
     def set_switches(cls, args: argparse.Namespace, parser: argparse.ArgumentParser):
-        if 'date_format' in args:
+        if args.date_format is not None:
             cls.dateMode = cls.convert_enum(cls.dateModes, args.date_format, "date format", parser)
-        if 'date_start' in args:
+        if args.date_start is not None:
             cls.dateStart = cls.convert_date(args.date_start, parser)
-        if 'date_end' in args:
+        if args.date_end is not None:
             cls.dateEnd = cls.convert_date(args.date_end, parser)
 
     # Handle date parsing
