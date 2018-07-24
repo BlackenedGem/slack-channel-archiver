@@ -12,8 +12,8 @@ class Switches:
     # Set using arguments
     @classmethod
     def set_switches(cls, args: argparse.Namespace, parser: argparse.ArgumentParser):
-        if 'df' in args:
-            cls.dateMode = cls.convert_enum(cls.dateModes, args['df'], "date format", parser)
+        if 'date_format' in args:
+            cls.dateMode = cls.convert_enum(cls.dateModes, args.date_format, "date format", parser)
 
     # Method to handle parsing switches properly
     @classmethod
