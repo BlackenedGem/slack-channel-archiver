@@ -7,7 +7,6 @@ from jsonschema import validate, ValidationError
 
 from switches import Switches
 
-
 class Api:
     # region Constants
     URL_HISTORY_DM = "https://slack.com/api/im.history"
@@ -156,4 +155,4 @@ class Api:
 
     @classmethod
     def format_time(cls, time: datetime):
-        return datetime.datetime.strftime(time, Switches.dateMode.value)
+        return datetime.datetime.strftime(time, Switches.date_mode.value)
