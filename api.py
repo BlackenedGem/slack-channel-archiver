@@ -13,7 +13,7 @@ class Api:
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_INFO = "https://slack.com/api/users.info"
 
-    REQUEST_COUNT = 2
+    REQUEST_COUNT = 500
 
     # region Schemas
     SCHEMA_HISTORY_DM = {
@@ -62,6 +62,7 @@ class Api:
 
     @classmethod
     def get_username(cls, user_id: str):
+        print(f"Retrieving display name for user ID: {user_id}")
         response = cls.get_request(cls.URL_USER_INFO, {'user': user_id}, cls.SCHEMA_USER_INFO)
         return response['user']['profile']['display_name']
 
@@ -110,13 +111,12 @@ class Api:
     @classmethod
     def get_request(cls, url: str, params: dict, schema: dict = None):
         # variables
-        error_msg = f"Exception with request"
+        error_msg = f"Exception with request for URL: {url}"
         params['token'] = cls.token
 
         # Go through obvious failure points
         # noinspection PyBroadException
         try:
-            print(f"GET: {url}")
             response = requests.get(url, params)
         except requests.exceptions.RequestException as e:
             print(error_msg)
