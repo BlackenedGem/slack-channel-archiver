@@ -14,9 +14,15 @@ class Api:
             "user": {
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string"}
+                    "profile": {
+                        "type": "object",
+                        "properties": {
+                            "display_name": {"type": "string"}
+                        },
+                        "required": ["display_name"]
+                    }
                 },
-                "required": ["name"]
+                "required": ["profile"]
             }
         },
         "required": ["user"]
@@ -29,7 +35,7 @@ class Api:
     def get_username(cls, user_id: str):
         response = cls.get_request(cls.URL_USER_INFO, {'user': user_id})
         cls.validate_response(response, cls.SCHEMA_USER_INFO)
-        return response
+        return response['user']['profile']['display_name']
 
     # Validate JSON according to schema provided
     @classmethod
@@ -70,12 +76,12 @@ class Api:
             sys.exit(-1)
 
         resp_json = json.loads(response.text)
-        if 'ok' not in resp_json or 'error' not in resp_json:
+        if 'ok' not in resp_json or ('ok' not in resp_json and 'error' not in resp_json):
             print(error_msg)
             print("Returned JSON was not in the correct format:")
             print(json.dumps(resp_json, indent=4))
             sys.exit(-1)
-        print(json.dumps(resp_json, indent=4))
+
         if not resp_json['ok']:
             print(error_msg)
             print("Response gave 'false' signal for ok. Error provided: " + resp_json['error'])
