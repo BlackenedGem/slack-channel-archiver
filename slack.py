@@ -1,5 +1,6 @@
 import datetime
 from switches import Switches
+from status import Status
 
 class Slack:
     # region CONSTANTS
@@ -32,10 +33,9 @@ class Slack:
         self.thread_msgs = None
         self.process_channel_threads = process_threads
 
-    def format(self, messages: list):
-        pass
-
     def format_messages(self, messages, process_children=False):
+        self.thread_msgs = self.get_thread_msgs(messages)
+
         # Reset last date/user
         self.__last_date = None
         self.__last_user = None
@@ -95,7 +95,7 @@ class Slack:
         # If message contains replies, then add them as a thread
         if 'thread_ts' in msg and 'replies' in msg and len(msg['replies']) > 0:
             body_str += "\n\n" + Slack.INDENTATION_SHORT + "T: "
-            body_str += self. add_thread_msgs(msg)
+            body_str += self.add_thread_msgs(msg)
 
         # Update last_user
         self.__last_user = username
@@ -292,6 +292,10 @@ class Slack:
         thread = []
         for child in parent['replies']:
             child_ts = child['ts']
+
+            if child_ts not in self.thread_msgs:
+                Status.thread_msgs_not_found += 1
+                continue
             child_msg = self.thread_msgs[child_ts]
             thread.append(child_msg)
 
@@ -320,7 +324,7 @@ class Slack:
         return time_str
 
     @staticmethod
-    def __get_thread_msgs(data):
+    def get_thread_msgs(data):
         msgs = {}
 
         for msg in data:
