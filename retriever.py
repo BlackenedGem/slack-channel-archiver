@@ -4,6 +4,7 @@ import json
 
 from switches import Switches
 from api import Api
+from status import Warnings
 
 def arg_setup():
     # Required args
@@ -22,7 +23,7 @@ def arg_setup():
                         help="Latest messages to archive (inclusive)")
 
     # Export args
-    parser.add_argument('-o', '--output', nargs='?', const='', default='',
+    parser.add_argument('-o', '--output', nargs='?', const='output', default='',
                         help="Output directory to use")
     parser.add_argument('-j', '--json', action='store_const', const='dm.json',
                         help="Output the message history in raw json form")
@@ -34,26 +35,41 @@ def arg_setup():
 
     return parsed_args
 
-args = arg_setup()
+def get_user_map(message_list):
+    user_id_map = {}
+    user_ids = set(x['user'] for x in message_list)
+    for user_id in user_ids:
+        user_id_map[user_id] = Api.get_username(user_id)
+    return user_id_map
 
-# Retrieve messages and write to json if requested
+def write_to_file(file: str, data):
+    # Get full path and create directory if it doesn't exist
+    loc = os.path.join(args.output, file)
+    print(f"Saving data to {loc}")
+    os.makedirs(os.path.dirname(loc), exist_ok=True)
+
+    # Write to file and return true/false
+    try:
+        with open(loc, "w") as f:
+            f.write(data)
+    except (IOError, FileNotFoundError) as e:
+        print(e)
+        return False
+
+    return True
+
+# PROGRAM START
+args = arg_setup()
+status = Warnings()
+
+# Retrieve messages
 messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
+# Write to JSON
 if args.json is not None:
-    out_file = os.path.join(args.output + args.json)
-    print("Writing raw JSON to: " + out_file)
-
-    # noinspection PyBroadException
-    try:
-        open(out_file, 'w').write(json.dumps(messages, indent=4))
-    except Exception as e:
-        print(e)
+    print("Exporting raw json")
+    status.export_json = not write_to_file(args.json, json.dumps(messages, indent=4))
 
 # Mapping of user ids to display names
-user_map = {}
-user_ids = set(x['user'] for x in messages)
-for user_id in user_ids:
-    user_map[user_id] = Api.get_username(user_id)
-
-print(json.dumps(messages, indent=4))
+user_map = get_user_map(messages)
