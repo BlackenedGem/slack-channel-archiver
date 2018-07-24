@@ -9,7 +9,7 @@ class Switches:
         UK = '%d/%m/%Y'
     dateMode = dateModes.ISO8601
     dateStart = None
-    dateEnd = datetime.date.today() + datetime.timedelta(days=1)
+    dateEnd = datetime.datetime.today() + datetime.timedelta(days=1)
     # endregion
 
     # Set using arguments
