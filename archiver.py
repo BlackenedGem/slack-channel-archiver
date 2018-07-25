@@ -1,6 +1,6 @@
 import argparse
 import os.path
-import sys
+import json
 
 from switches import Switches
 from api import Api
@@ -38,14 +38,7 @@ def arg_setup():
 
     return parsed_args
 
-def get_user_map(message_list):
-    user_id_map = {}
-    user_ids = set(x['user'] for x in message_list)
-    for user_id in user_ids:
-        user_id_map[user_id] = Api.get_username(user_id)
-    return user_id_map
-
-def get_user_map_new():
+def get_user_map():
     user_id_map = {}
 
     # Make requests until response_metadata has no cursor
@@ -57,7 +50,7 @@ def get_user_map_new():
             user_id_map[profile['id']] = profile['profile']['display_name']
 
         if cursor is None:
-            pass
+            break
 
     return user_id_map
 
@@ -85,15 +78,10 @@ args = arg_setup()
 messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
-print(get_user_map_new())
-sys.exit(1)
-
 # Format text
-user_map = get_user_map(messages)
+user_map = get_user_map()
 slack = Slack(user_map)
 formatted_text = slack.format_messages(messages)
-
-print("")
 
 # Write to JSON
 if args.json is not None:
