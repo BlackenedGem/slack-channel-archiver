@@ -57,7 +57,7 @@ def get_user_map_new():
             user_id_map[profile['id']] = profile['profile']['display_name']
 
         if cursor is None:
-            break
+            pass
 
     return user_id_map
 

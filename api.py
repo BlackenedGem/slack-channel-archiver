@@ -1,8 +1,8 @@
 import datetime
-
 import requests
 import sys
 import json
+import time
 from jsonschema import validate, ValidationError
 
 from switches import Switches
@@ -14,6 +14,10 @@ class Api:
 
     REQUEST_COUNT_HISTORY = 500
     REQUEST_COUNT_USERS = 0
+    TIMEOUT_RETRIES = 3
+
+    WAIT_TIME_HISTORY_DM = 1
+    WAIT_TIME_USER_LIST = 5
 
     # region Schemas
     SCHEMA_HISTORY_DM = {
@@ -70,15 +74,8 @@ class Api:
         if cursor is not None:
             params['cursor'] = cursor
 
-        response = cls.get_request(cls.URL_USER_LIST, params, cls.SCHEMA_USER_LIST)
+        response = cls.get_request(cls.URL_USER_LIST, params, schema=cls.SCHEMA_USER_LIST, timeout=cls.WAIT_TIME_USER_LIST)
         return response['members'], cls.get_cursor(response)
-
-
-    @classmethod
-    def get_username(cls, user_id: str):
-        print(f"Retrieving display name for user ID: {user_id}")
-        response = cls.get_request(cls.URL_USER_LIST, {'user': user_id}, cls.SCHEMA_USER_LIST)
-        return response['user']['profile']['display_name']
 
     @classmethod
     def get_dm_history(cls, dm, start_time: datetime, end_time: datetime):
@@ -98,7 +95,7 @@ class Api:
         while True:
             # Get next batch of messages
             print(f"Querying slack for messages between {params['oldest']} - {params['latest']}")
-            content = cls.get_request(cls.URL_HISTORY_DM, params, cls.SCHEMA_HISTORY_DM)
+            content = cls.get_request(cls.URL_HISTORY_DM, params, schema=cls.SCHEMA_HISTORY_DM, timeout=cls.WAIT_TIME_HISTORY_DM)
 
             next_messages = content['messages']
             if len(next_messages) == 0:
@@ -123,7 +120,31 @@ class Api:
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
     @classmethod
-    def get_request(cls, url: str, params: dict, schema: dict = None):
+    def get_request(cls, url: str, params: dict, schema: dict = None, timeout: int = 5):
+        num_tries = 0
+
+        while num_tries < cls.TIMEOUT_RETRIES:
+            if num_tries > 0:
+                print(f"Retrying... (attempt {num_tries + 1})")
+            attempt = cls.get_request_once(url, params, schema)
+            num_tries += 1
+
+            if attempt is False:
+                continue
+            if attempt is True:
+                print(f"Waiting for {timeout} second(s)")
+                time.sleep(timeout)
+                continue
+
+            return attempt
+
+        print(f"Maximum attempts exceeded ({cls.TIMEOUT_RETRIES})")
+        sys.exit(-1)
+
+    # Returns False for error
+    # Returns True for error with 429 code
+    @classmethod
+    def get_request_once(cls, url: str, params: dict, schema: dict = None):
         # variables
         error_msg = f"Exception with request for URL: {url}"
         params['token'] = cls.token
@@ -135,24 +156,29 @@ class Api:
         except requests.exceptions.RequestException as e:
             print(error_msg)
             print(e)
-            sys.exit(-1)
+            return False
+
+        if response.status_code == 429:
+            print(error_msg)
+            print("Status code: " + str(response.status_code) + " (Too many requests)")
+            return True
 
         if response.status_code != 200:
             print(error_msg)
             print("Status code: " + str(response.status_code))
-            sys.exit(-1)
+            return False
 
         if response.text is None:
             print(error_msg)
             print("Response is null")
-            sys.exit(-1)
+            return False
 
         resp_json = json.loads(response.text)
         if 'ok' not in resp_json or ('ok' not in resp_json and 'error' not in resp_json):
             print(error_msg)
             print("Returned JSON was not in the correct format:")
             print(json.dumps(resp_json, indent=4))
-            sys.exit(-1)
+            return False
 
         if not resp_json['ok']:
             print(error_msg)
@@ -164,7 +190,7 @@ class Api:
             except ValidationError as e:
                 print(error_msg)
                 print(e)
-                sys.exit(-1)
+                return False
 
         return resp_json
 
