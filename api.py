@@ -44,6 +44,7 @@ class Api:
                 "items": {
                     "type": "object",
                     "properties": {
+                        "id": {"type": "string"},
                         "profile": {
                             "type": "object",
                             "properties": {
@@ -52,7 +53,7 @@ class Api:
                             "required": ["display_name"]
                         }
                     },
-                    "required": ["profile"]
+                    "required": ["id", "profile"]
                 }
             }
         },
@@ -64,13 +65,14 @@ class Api:
     token = None
 
     @classmethod
-    def get_usernames(cls, cursor=None):
+    def get_profiles(cls, cursor=None):
         params = {'list': cls.REQUEST_COUNT_USERS}
         if cursor is not None:
             params['cursor'] = cursor
 
         response = cls.get_request(cls.URL_USER_LIST, params, cls.SCHEMA_USER_LIST)
-        print(response)
+        return response['members'], cls.get_cursor(response)
+
 
     @classmethod
     def get_username(cls, user_id: str):
@@ -137,7 +139,7 @@ class Api:
 
         if response.status_code != 200:
             print(error_msg)
-            print("Status code: " + response.status_code)
+            print("Status code: " + str(response.status_code))
             sys.exit(-1)
 
         if response.text is None:
@@ -165,6 +167,22 @@ class Api:
                 sys.exit(-1)
 
         return resp_json
+
+    @classmethod
+    def get_cursor(cls, data: dict):
+        if 'response_metadata' not in data:
+            return None
+        response_metadata = data['response_metadata']
+
+        if 'next_cursor' not in response_metadata:
+            return None
+
+        cursor = response_metadata['next_cursor']
+        if cursor is None:
+            return None
+        if len(cursor) == 0:
+            return None
+        return cursor
 
     @classmethod
     def format_time(cls, time: datetime):

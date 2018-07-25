@@ -49,7 +49,18 @@ def get_user_map_new():
     user_id_map = {}
 
     # Make requests until response_metadata has no cursor
-    Api.get_usernames()
+    cursor = None
+    while True:
+        profiles, cursor = Api.get_profiles(cursor)
+
+        for profile in profiles:
+            user_id_map[profile['id']] = profile['profile']['display_name']
+
+        if cursor is None:
+            break
+
+    return user_id_map
+
 
 def write_to_file(file: str, data):
     # Get full path and create directory if it doesn't exist
@@ -74,7 +85,7 @@ args = arg_setup()
 messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
-get_user_map_new()
+print(get_user_map_new())
 sys.exit(1)
 
 # Format text
