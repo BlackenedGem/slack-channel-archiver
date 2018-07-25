@@ -12,7 +12,8 @@ class Api:
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_LIST = "https://slack.com/api/users.list"
 
-    REQUEST_COUNT = 500
+    REQUEST_COUNT_HISTORY = 500
+    REQUEST_COUNT_USERS = 0
 
     # region Schemas
     SCHEMA_HISTORY_DM = {
@@ -64,7 +65,7 @@ class Api:
 
     @classmethod
     def get_usernames(cls, cursor=None):
-        params = {}
+        params = {'list': cls.REQUEST_COUNT_USERS}
         if cursor is not None:
             params['cursor'] = cursor
 
@@ -86,7 +87,7 @@ class Api:
             'inclusive': True,
             'oldest': start_time.timestamp(),
             'latest': end_time.timestamp(),
-            'count': cls.REQUEST_COUNT
+            'count': cls.REQUEST_COUNT_HISTORY
         }
 
         # Build up array repeatedly
