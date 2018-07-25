@@ -1,6 +1,6 @@
 import argparse
 import os.path
-import json
+import sys
 
 from switches import Switches
 from api import Api
@@ -45,6 +45,12 @@ def get_user_map(message_list):
         user_id_map[user_id] = Api.get_username(user_id)
     return user_id_map
 
+def get_user_map_new():
+    user_id_map = {}
+
+    # Make requests until response_metadata has no cursor
+    Api.get_usernames()
+
 def write_to_file(file: str, data):
     # Get full path and create directory if it doesn't exist
     loc = os.path.join(args.output, file)
@@ -67,6 +73,9 @@ args = arg_setup()
 # Retrieve messages
 messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
+
+get_user_map_new()
+sys.exit(1)
 
 # Format text
 user_map = get_user_map(messages)

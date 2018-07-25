@@ -10,7 +10,7 @@ from switches import Switches
 class Api:
     # region Constants
     URL_HISTORY_DM = "https://slack.com/api/im.history"
-    URL_USER_INFO = "https://slack.com/api/users.info"
+    URL_USER_LIST = "https://slack.com/api/users.list"
 
     REQUEST_COUNT = 500
 
@@ -35,24 +35,27 @@ class Api:
         },
         "required": ["messages", "has_more"]
     }
-    SCHEMA_USER_INFO = {
+    SCHEMA_USER_LIST = {
         "type": "object",
         "properties": {
-            "user": {
-                "type": "object",
-                "properties": {
-                    "profile": {
-                        "type": "object",
-                        "properties": {
-                            "display_name": {"type": "string"}
-                        },
-                        "required": ["display_name"]
-                    }
-                },
-                "required": ["profile"]
+            "members": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "profile": {
+                            "type": "object",
+                            "properties": {
+                                "display_name": {"type": "string"}
+                            },
+                            "required": ["display_name"]
+                        }
+                    },
+                    "required": ["profile"]
+                }
             }
         },
-        "required": ["user"]
+        "required": ["members"]
     }
     # endregion
     # endregion
@@ -60,9 +63,18 @@ class Api:
     token = None
 
     @classmethod
+    def get_usernames(cls, cursor=None):
+        params = {}
+        if cursor is not None:
+            params['cursor'] = cursor
+
+        response = cls.get_request(cls.URL_USER_LIST, params, cls.SCHEMA_USER_LIST)
+        print(response)
+
+    @classmethod
     def get_username(cls, user_id: str):
         print(f"Retrieving display name for user ID: {user_id}")
-        response = cls.get_request(cls.URL_USER_INFO, {'user': user_id}, cls.SCHEMA_USER_INFO)
+        response = cls.get_request(cls.URL_USER_LIST, {'user': user_id}, cls.SCHEMA_USER_LIST)
         return response['user']['profile']['display_name']
 
     @classmethod
