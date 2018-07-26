@@ -1,6 +1,9 @@
 # Class to store list of warnings/errors encountered during execution
 
 class Status:
+    # Stats
+    tot_files = 0
+
     # Errors
     export_json = False
     export_text = False
@@ -25,7 +28,7 @@ class Status:
         return cls.thread_msgs_not_found
 
     @classmethod
-    def print_warnings(cls, tot_files: int):
+    def print_warnings(cls):
         errors = cls.num_errors()
         warns = cls.num_warnings()
 
@@ -42,7 +45,7 @@ class Status:
         if cls.export_text:
             print("Text export failed")
         if cls.file_failures > 0:
-            print(f"Could not download {cls.file_failures} files ({tot_files} total)")
+            print(f"Could not download {cls.file_failures} files ({cls.tot_files} total)")
 
         if warns == 0:
             return

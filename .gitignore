@@ -1,4 +1,5 @@
 # Workspace
 .idea/
 output/
+output_files/
 __pycache__/

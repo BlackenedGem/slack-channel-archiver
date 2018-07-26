@@ -77,6 +77,23 @@ def write_to_file(file: str, data):
 
     return True
 
+def download_files():
+    print("Analysing JSON for uploaded files (as files.list does not support DMs)")
+    files = Files.get_files(messages, user_map)
+    print(f"Found {len(files)} file(s) from {len(messages)} messages")
+
+    if len(files) == 0:
+        return
+
+    print("")
+    for file in files:
+        success = Files.download_file(file, args.files, user_map)
+
+        if success:
+            Status.tot_files += 1
+        else:
+            Status.file_failures += 1
+
 # PROGRAM START
 args = arg_setup()
 
@@ -102,6 +119,6 @@ if args.text is not None:
     Status.export_text = not write_to_file(args.text, formatted_text)
 
 if args.files is not None:
-    print("Analysing JSON for uploaded files (as files.list does not support DMs)")
-    files = Files.get_files(messages, user_map)
-    print(f"Found {len(files)} file(s) from {len(messages)} messages")
+    download_files()
+
+Status.print_warnings()
