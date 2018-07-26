@@ -14,7 +14,7 @@ class Api:
     URL_USER_LIST = "https://slack.com/api/users.list"
 
     REQUEST_COUNT_HISTORY = 500
-    REQUEST_COUNT_FILES = 5
+    REQUEST_COUNT_FILES = 100
     REQUEST_COUNT_USERS = 0
 
     # Number of times to retry and wait times (in seconds)
