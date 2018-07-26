@@ -3,6 +3,7 @@
 class Status:
     # Stats
     tot_files = 0
+    files_already_exist = 0
 
     # Errors
     export_json = False
