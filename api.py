@@ -18,9 +18,9 @@ class Api:
 
     # Number of times to retry and wait times (in seconds)
     TIMEOUT_RETRIES = 3
-    WAIT_TIME_HISTORY_DM = 1
-    WAIT_TIME_USER_LIST = 5
-    WAIT_TIME_FILE_LIST = 3
+    WAIT_TIME_TIER_2 = 5
+    WAIT_TIME_TIER_3 = 3
+    WAIT_TIME_TIER_4 = 1
 
     # region Schemas
     SCHEMA_FILE_LIST = {
@@ -131,7 +131,7 @@ class Api:
         if cursor is not None:
             params['cursor'] = cursor
 
-        response = cls.get_request(cls.URL_USER_LIST, params, schema=cls.SCHEMA_USER_LIST, timeout=cls.WAIT_TIME_USER_LIST)
+        response = cls.get_request(cls.URL_USER_LIST, params, schema=cls.SCHEMA_USER_LIST, timeout=cls.WAIT_TIME_TIER_2)
         return response['members'], cls.get_cursor(response)
 
     @classmethod
@@ -152,7 +152,7 @@ class Api:
         while True:
             # Get next batch of messages
             print(f"Querying slack for messages between {params['oldest']} - {params['latest']}")
-            content = cls.get_request(cls.URL_HISTORY_DM, params, schema=cls.SCHEMA_HISTORY_DM, timeout=cls.WAIT_TIME_HISTORY_DM)
+            content = cls.get_request(cls.URL_HISTORY_DM, params, schema=cls.SCHEMA_HISTORY_DM, timeout=cls.WAIT_TIME_TIER_4)
 
             next_messages = content['messages']
             if len(next_messages) == 0:
