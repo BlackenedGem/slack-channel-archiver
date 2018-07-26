@@ -26,11 +26,15 @@ def arg_setup():
 
     # Export args
     parser.add_argument('-o', '--output', nargs='?', const='output', default='',
-                        help="Output directory to use")
+                        help="Output directory to use for exports (excluding files)")
     parser.add_argument('-j', '--json', action='store_const', const='dm.json',
                         help="Output the message history in raw json form")
     parser.add_argument('-t', '--text', nargs='?', const='dm.txt', default='dm.text',
                         help="Output the message history in human readable form")
+
+    # File args
+    parser.add_argument('-f', '--files', action='store_const', const='files',
+                        help="Download files found in JSON to the directory")
 
     # Process basic args
     parsed_args = parser.parse_args()
@@ -40,6 +44,7 @@ def arg_setup():
     return parsed_args
 
 def get_user_map():
+    print("Retrieving user mappings")
     user_id_map = {}
 
     # Make requests until response_metadata has no cursor
@@ -78,16 +83,22 @@ args = arg_setup()
 messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
-# Format text
+# Get user map
+print("\n")
 user_map = get_user_map()
 slack = Slack(user_map)
-formatted_text = slack.format_messages(messages)
 
 # Write to JSON
 if args.json is not None:
     print("Exporting raw json")
     Status.export_json = not write_to_file(args.json, json.dumps(messages, indent=4))
 
+# Write to txt
 if args.text is not None:
+    print("Formatting text")
+    formatted_text = slack.format_messages(messages)
     print("Exporting text")
     Status.export_text = not write_to_file(args.text, formatted_text)
+
+if args.files is not None:
+    print("Analysing JSON for uploaded files (as files.list does not support DMs)")
