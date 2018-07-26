@@ -9,17 +9,74 @@ from switches import Switches
 
 class Api:
     # region Constants
+    URL_FILE_LIST = "https://slack.com/methods/files.list"
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_LIST = "https://slack.com/api/users.list"
 
     REQUEST_COUNT_HISTORY = 500
     REQUEST_COUNT_USERS = 0
-    TIMEOUT_RETRIES = 3
 
+    # Number of times to retry and wait times (in seconds)
+    TIMEOUT_RETRIES = 3
     WAIT_TIME_HISTORY_DM = 1
     WAIT_TIME_USER_LIST = 5
+    WAIT_TIME_FILE_LIST = 3
 
     # region Schemas
+    SCHEMA_FILE_LIST = {
+        "type": "object",
+        "properties": {
+            "files": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "size": {
+                            "type": "integer"
+                        },
+                        "url_private_download": {
+                            "type": "string"
+                        },
+                        "created": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "size",
+                        "url_private_download",
+                        "created"
+                    ]
+                }
+            },
+            "paging": {
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "pages": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "total",
+                    "page",
+                    "pages"
+                ]
+            }
+        },
+        "required": [
+            "files",
+            "paging"
+        ]
+    }
     SCHEMA_HISTORY_DM = {
         "type": "object",
         "properties": {
@@ -116,6 +173,10 @@ class Api:
             params['latest'] = next_messages[-1]['ts']
 
         return messages
+
+    @classmethod
+    def get_file_list(cls):
+        pass
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
