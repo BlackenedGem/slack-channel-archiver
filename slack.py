@@ -74,7 +74,7 @@ class Slack:
         subtype = None
         if 'subtype' in msg:
             subtype = msg['subtype']
-        username = self.get_username(msg)
+        username = self.get_username(msg, self.user_map)
 
         # user is new (and date has not changed), add a newline to the prefix
         if self.__last_user != username and prefix_str == "\n":
@@ -130,7 +130,7 @@ class Slack:
             ret += "_" + self.format_msg_text(msg) + "_"
 
         elif subtype == 'file_comment':
-            comment_username = self.get_username(msg['comment'])
+            comment_username = self.get_username(msg['comment'], self.user_map)
             ret += self.format_file_msg(msg, comment_username, "commented on")
 
             ret += "\n" + Slack.INDENTATION_SHORT + "C: "
@@ -168,7 +168,7 @@ class Slack:
         return ret
 
     def format_file_msg(self, msg, username, phrase: str):
-        file_username = self.get_username(msg['file'])
+        file_username = self.get_username(msg['file'], self.user_map)
 
         if file_username == username:
             return username + " " + phrase + " their file: " + self.get_file_link(msg)
@@ -187,7 +187,7 @@ class Slack:
         file = files[0]
 
         # Extract info
-        file_user = self.get_username(file)
+        file_user = self.get_username(file, self.user_map)
         upload = msg.get('upload', False)
         share = msg.get('is_share', False)
 
@@ -295,7 +295,7 @@ class Slack:
             attachments = msg['attachments']
 
             for a in attachments:
-                ret_str += self.format_attachment(a, self.get_username(msg))
+                ret_str += self.format_attachment(a, self.get_username(msg, self.user_map))
 
         # Last attachment should not add a newline, this is the easiest way to get rid of it
         if ret_str.endswith("\n"):
@@ -319,7 +319,8 @@ class Slack:
 
         return msg
 
-    def get_username(self, msg):
+    @staticmethod
+    def get_username(msg, user_map: dict):
         # Prefer user over username field, since this is an ID and username can be present but blank
         if 'user' in msg:
             username = msg['user']
@@ -327,7 +328,7 @@ class Slack:
             if username == "USLACKBOT":
                 return 'Slackbot'
             else:
-                return self.user_map[username]
+                return user_map[username]
 
         if 'username' in msg:
             return msg['username']
