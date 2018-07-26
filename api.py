@@ -14,6 +14,7 @@ class Api:
     URL_USER_LIST = "https://slack.com/api/users.list"
 
     REQUEST_COUNT_HISTORY = 500
+    REQUEST_COUNT_FILES = 5
     REQUEST_COUNT_USERS = 0
 
     # Number of times to retry and wait times (in seconds)
@@ -23,7 +24,7 @@ class Api:
     WAIT_TIME_TIER_4 = 1
 
     # region Schemas
-    SCHEMA_FILES_LIST = {
+    SCHEMA_FILE_LIST = {
         "$schema": "http://json-schema.org/draft-04/schema#",
         "type": "object",
         "properties": {
@@ -189,6 +190,41 @@ class Api:
             params['latest'] = next_messages[-1]['ts']
 
         return messages
+
+    @classmethod
+    def get_file_list(cls, dm, start_time: datetime, end_time: datetime):
+        page = 1
+        params = {
+            'count': cls.REQUEST_COUNT_FILES,
+            'ts_from': start_time.timestamp(),
+            'ts_to': end_time.timestamp()
+        }
+
+        file_list = []
+        while True:
+            # Get next page of files
+            params['page'] = page
+            print(f"Querying slack for page {page} of ALL files between {params['ts_from']} - {params['ts_to']}")
+            response = cls.get_request(cls.URL_FILE_LIST, params, cls.SCHEMA_FILE_LIST)
+
+            # Check that reported files matches number of file objects (because I'm paranoid)
+            files = response['files']
+            num_files = response['paging']['total']
+            if num_files != len(files):
+                print(f"Number of files found and reported by slack differ. Reported: {num_files}, given: {len(files)}")
+
+            # Add files to list, filtering on ims
+            for file in response['files']:
+                if dm in file['ims']:
+                    file_list.append(file)
+            print(f"Retrieved data about {num_files} files")
+
+            # Decide whether to continue or not
+            if num_files == 0 or response['paging']['page'] == response['paging']['pages']:
+                break
+            page += 1
+
+        return file_list
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything

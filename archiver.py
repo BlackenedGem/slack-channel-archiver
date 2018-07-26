@@ -79,17 +79,15 @@ def write_to_file(file: str, data):
 
     return True
 
-def download_files():
-    print("Analysing JSON for uploaded files (as files.list does not support DMs)")
-    files = Files.get_files(messages)
-    print(f"Found {len(files)} file(s) from {len(messages)} messages")
-
-    if len(files) == 0:
+def download_files(file_list):
+    # Old method using scraping
+    # files = Files.get_files(messages)
+    if len(file_list) == 0:
         return
 
     # Download files
     print("")
-    for file in files:
+    for file in file_list:
         success = Files.download_file(args.token, file, args.files, user_map, overwrite=args.files_overwrite)
 
         if success:
@@ -131,6 +129,10 @@ if args.text is not None:
     Status.export_text = not write_to_file(args.text, formatted_text)
 
 if args.files is not None:
-    download_files()
+    print("\nRetrieving list of ALL files uploaded to slack")
+    files = Api.get_file_list(args.dm, Switches.date_start, Switches.date_end)
+    print(f"Found {len(files)} file(s) that were sent in DM " + args.dm)
+
+    download_files(files)
 
 Status.print_warnings()
