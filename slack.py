@@ -334,14 +334,19 @@ class Slack:
         return thread_str
 
     @staticmethod
-    def format_timestamp(ts, full=False, min_divide_char=':'):
+    def format_timestamp(ts, full=False, min_divide_char=':', no_slashes=False):
+        time_format = Switches.date_mode.value
+        if no_slashes:
+            time_format = time_format.replace("\\", "-")
+            time_format = time_format.replace("/", "-")
+
         dt = datetime.datetime.fromtimestamp(float(ts))
         date = dt.date()
         time = dt.time()
 
         time_str = "["
         if full:
-            time_str += date.strftime(Switches.date_mode.value) + " - "
+            time_str += date.strftime(time_format) + " - "
 
         time_str += str(time.hour).rjust(2, '0') + min_divide_char + str(time.minute).rjust(2, '0') + "] "
         return time_str

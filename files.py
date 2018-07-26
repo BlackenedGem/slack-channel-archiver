@@ -6,7 +6,7 @@ from slack import Slack
 
 class Files:
     @classmethod
-    def get_files(cls, messages, user_map: dict):
+    def get_files(cls, messages):
         files = []
 
         for msg in messages:
@@ -24,10 +24,12 @@ class Files:
         file_size = cls.bytes_to_str(file['size'])
         file_user = Slack.get_username(file, user_map)
 
-        file_name = file['name']
+        file_name = file['title']
+        if not file_name.endswith(file['filetype']):
+            file_name += "." + file['filetype']
         file_name = re.sub('[\\\/:*?"<>|]', '', file_name)
 
-        save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';')
+        save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';', no_slashes=True)
         save_name += f"- {file_user} - {file_name}"
         save_loc = os.path.join(file_dir, save_name)
         os.makedirs(os.path.dirname(save_loc), exist_ok=True)

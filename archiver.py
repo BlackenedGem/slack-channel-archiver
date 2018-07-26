@@ -79,7 +79,7 @@ def write_to_file(file: str, data):
 
 def download_files():
     print("Analysing JSON for uploaded files (as files.list does not support DMs)")
-    files = Files.get_files(messages, user_map)
+    files = Files.get_files(messages)
     print(f"Found {len(files)} file(s) from {len(messages)} messages")
 
     if len(files) == 0:
