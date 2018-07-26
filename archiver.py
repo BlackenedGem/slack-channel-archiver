@@ -36,8 +36,8 @@ def arg_setup():
     # File args
     parser.add_argument('-f', '--files', nargs='?', const='output_files',
                         help="Download files found in JSON to the directory")
-    parser.add_argument('-fo', '--files-override', action='store_true',
-                        help="Override files if they exist")
+    parser.add_argument('-fo', '--files-overwrite', action='store_true',
+                        help="Overwrite files if they exist")
 
     # Process basic args
     parsed_args = parser.parse_args()
@@ -89,7 +89,7 @@ def download_files():
 
     print("")
     for file in files:
-        success = Files.download_file(file, args.files, user_map, override=args.files_override)
+        success = Files.download_file(file, args.files, user_map, overwrite=args.files_overwrite)
 
         if success:
             Status.tot_files += 1
@@ -97,8 +97,8 @@ def download_files():
             Status.file_failures += 1
 
     print("File download complete")
-    if args.files_override:
-        print(f"{Status.files_already_exist} files were overriden")
+    if args.files_overwrite:
+        print(f"{Status.files_already_exist} files were overwritten")
     else:
         print(f"{Status.files_already_exist} files were not downloaded as files with the same name already existed")
 

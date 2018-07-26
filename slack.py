@@ -180,6 +180,7 @@ class Slack:
         return file
 
     @staticmethod
+
     def get_file_link(msg):
         ret_str = "<"
 

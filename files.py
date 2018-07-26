@@ -19,7 +19,7 @@ class Files:
         return files
 
     @classmethod
-    def download_file(cls, file, file_dir, user_map: dict, override=False):
+    def download_file(cls, file, file_dir, user_map: dict, overwrite=False):
         download_url = file['url_private_download']
 
         file_size = cls.bytes_to_str(file['size'])
@@ -36,7 +36,7 @@ class Files:
         os.makedirs(os.path.dirname(save_loc), exist_ok=True)
 
         print("Downloading file from '" + download_url + "' (" + file_size + ")")
-        return cls.download(download_url, save_loc, override)
+        return cls.download(download_url, save_loc, overwrite)
 
     @staticmethod
     def bytes_to_str(size: int, precision=2):
@@ -49,13 +49,15 @@ class Files:
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
     @staticmethod
-    def download(source: str, save_loc: str, override: bool):
+    def download(source: str, save_loc: str, overwrite: bool):
         if os.path.exists(save_loc):
-            print("File already exists in download location '" + save_loc + "'")
             Status.files_already_exist += 1
 
-            if not override:
+            if not overwrite:
+                print("File already exists in download location '" + save_loc + "'")
                 return True
+            else:
+                print("File already exists, overwrite")
 
         try:
             urllib.request.urlretrieve(source, save_loc)
