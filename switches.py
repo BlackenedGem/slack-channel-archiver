@@ -8,7 +8,7 @@ class Switches:
         ISO8601 = '%Y-%m-%d'
         UK = '%d/%m/%Y'
     date_mode = DateModes.ISO8601
-    date_start = None
+    date_start = datetime.datetime(2000, 1, 1)
     date_end = datetime.datetime.today() + datetime.timedelta(days=1)
     # endregion
 
@@ -33,7 +33,6 @@ class Switches:
             return datetime.datetime.strptime(date_str, cls.date_mode.value)
         except ValueError as e:
             arg_parser.error(e)
-
 
     # Handle parsing switches properly
     @classmethod
