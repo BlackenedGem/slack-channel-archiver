@@ -57,7 +57,7 @@ class Files:
                 print("File already exists in download location '" + save_loc + "'")
                 return True
             else:
-                print("File already exists, overwrite")
+                print("File already exists, overwriting")
 
         try:
             urllib.request.urlretrieve(source, save_loc)
