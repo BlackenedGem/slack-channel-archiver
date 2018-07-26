@@ -75,6 +75,9 @@ class Api:
                     "total": {
                         "type": "integer"
                     },
+                    "count": {
+                        "type": "integer"
+                    },
                     "page": {
                         "type": "integer"
                     },
@@ -84,6 +87,7 @@ class Api:
                 },
                 "required": [
                     "total",
+                    "count",
                     "page",
                     "pages"
                 ]
@@ -200,6 +204,7 @@ class Api:
             'ts_to': end_time.timestamp()
         }
 
+        num_files = 0
         file_list = []
         while True:
             # Get next page of files
@@ -207,17 +212,14 @@ class Api:
             print(f"Querying slack for page {page} of ALL files between {params['ts_from']} - {params['ts_to']}")
             response = cls.get_request(cls.URL_FILE_LIST, params, cls.SCHEMA_FILE_LIST)
 
-            # Check that reported files matches number of file objects (because I'm paranoid)
-            files = response['files']
-            num_files = response['paging']['total']
-            if num_files != len(files):
-                print(f"Number of files found and reported by slack differ. Reported: {num_files}, given: {len(files)}")
+            num_files += response['paging']['count']
+            tot_files = response['paging']['total']
+            print(f"Retrieved data about {num_files}/{tot_files} files")
 
             # Add files to list, filtering on ims
             for file in response['files']:
                 if dm in file['ims']:
                     file_list.append(file)
-            print(f"Retrieved data about {num_files} files")
 
             # Decide whether to continue or not
             if num_files == 0 or response['paging']['page'] == response['paging']['pages']:

@@ -131,7 +131,7 @@ if args.text is not None:
 if args.files is not None:
     print("\nRetrieving list of ALL files uploaded to slack")
     files = Api.get_file_list(args.dm, Switches.date_start, Switches.date_end)
-    print(f"Found {len(files)} file(s) that were sent in DM " + args.dm)
+    print(f"Found {len(files)} file(s) that were sent in {args.dm}")
 
     download_files(files)
 

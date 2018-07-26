@@ -11,7 +11,8 @@
         }
     ],
     "paging": {
-        "total": 2,
+        "total": 100,
+        "count": 2,
         "page": 1,
         "pages": 1
     }
