@@ -142,15 +142,9 @@ class Slack:
         return ret
 
     def get_file_str(self, msg, msg_user):
-        if 'files' not in msg:
+        file = self.get_file_obj_from_msg(msg)
+        if file is None:
             return ""
-
-        # Get file object
-        files = msg['files']
-        if len(files) != 1:
-            print(f"Encountered a file array with {len(files)}, this program only expects 1")
-            sys.exit(-1)
-        file = files[0]
 
         # Extract info
         file_user = self.get_username(file, self.user_map)
@@ -170,6 +164,20 @@ class Slack:
 
         ret_str += "'" + file['title'] + "'"
         return ret_str
+
+    @staticmethod
+    def get_file_obj_from_msg(msg):
+        if 'files' not in msg:
+            return None
+
+        # Get file object
+        files = msg['files']
+        if len(files) != 1:
+            print(f"Encountered a file array with {len(files)}, this program only expects 1")
+            sys.exit(-1)
+        file = files[0]
+
+        return file
 
     @staticmethod
     def get_file_link(msg):

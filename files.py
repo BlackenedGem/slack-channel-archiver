@@ -6,16 +6,29 @@ from slack import Slack
 
 class Files:
     @classmethod
-    def download_file(cls, file, user, file_dir):
+    def get_files(cls, messages, user_map: dict):
+        files = []
+
+        for msg in messages:
+            file = Slack.get_file_obj_from_msg(msg)
+
+            if file is not None:
+                files.append(file)
+
+        return files
+
+    @classmethod
+    def download_file(cls, file, file_dir, user_map: dict):
         download_url = file['url_private_download']
 
         file_size = cls.bytes_to_str(file['size'])
+        file_user = Slack.get_username(file, user_map)
 
         file_name = file['name']
         file_name = re.sub('[\\\/:*?"<>|]', '', file_name)
 
         save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';')
-        save_name += f"- {user} - {file_name}"
+        save_name += f"- {file_user} - {file_name}"
 
         print("Downloading file from '" + download_url + "' (" + file_size + ")")
 

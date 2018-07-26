@@ -3,10 +3,11 @@ import os.path
 import json
 import sys
 
-from switches import Switches
 from api import Api
-from status import Status
+from files import Files
 from slack import Slack
+from status import Status
+from switches import Switches
 
 def arg_setup():
     # Required args
@@ -27,13 +28,13 @@ def arg_setup():
     # Export args
     parser.add_argument('-o', '--output', nargs='?', const='output', default='',
                         help="Output directory to use for exports (excluding files)")
-    parser.add_argument('-j', '--json', action='store_const', const='dm.json',
+    parser.add_argument('-j', '--json', nargs='?', const='dm.json',
                         help="Output the message history in raw json form")
     parser.add_argument('-t', '--text', nargs='?', const='dm.txt', default='dm.text',
                         help="Output the message history in human readable form")
 
     # File args
-    parser.add_argument('-f', '--files', action='store_const', const='files',
+    parser.add_argument('-f', '--files', nargs='?', const='output_files',
                         help="Download files found in JSON to the directory")
 
     # Process basic args
@@ -84,7 +85,7 @@ messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
 # Get user map
-print("\n")
+print("")
 user_map = get_user_map()
 slack = Slack(user_map)
 
@@ -102,3 +103,5 @@ if args.text is not None:
 
 if args.files is not None:
     print("Analysing JSON for uploaded files (as files.list does not support DMs)")
+    files = Files.get_files(messages, user_map)
+    print(f"Found {len(files)} file(s) from {len(messages)} messages")
