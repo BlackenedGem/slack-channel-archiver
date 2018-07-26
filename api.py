@@ -9,6 +9,7 @@ from switches import Switches
 
 class Api:
     # region Constants
+    URL_FILE_LIST = "https://slack.com/api/files.list"
     URL_HISTORY_DM = "https://slack.com/api/im.history"
     URL_USER_LIST = "https://slack.com/api/users.list"
 
@@ -18,9 +19,80 @@ class Api:
     # Number of times to retry and wait times (in seconds)
     TIMEOUT_RETRIES = 3
     WAIT_TIME_TIER_2 = 5
+    WAIT_TIME_TIER_3 = 3
     WAIT_TIME_TIER_4 = 1
 
     # region Schemas
+    SCHEMA_FILES_LIST = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            "files": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "created": {
+                            "type": "integer"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "filetype": {
+                            "type": "string"
+                        },
+                        "user": {
+                            "type": "string"
+                        },
+                        "size": {
+                            "type": "integer"
+                        },
+                        "url_private_download": {
+                            "type": "string"
+                        },
+                        "ims": {
+                            "type": "array",
+                            "items": {
+                                "items": {}
+                            }
+                        }
+                    },
+                    "required": [
+                        "created",
+                        "title",
+                        "filetype",
+                        "user",
+                        "size",
+                        "url_private_download",
+                        "ims"
+                    ]
+                }
+            },
+            "paging": {
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "pages": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "total",
+                    "page",
+                    "pages"
+                ]
+            }
+        },
+        "required": [
+            "files",
+            "paging"
+        ]
+    }
     SCHEMA_HISTORY_DM = {
         "type": "object",
         "properties": {
