@@ -63,7 +63,7 @@ class Slack:
 
         # Denote change in date if new date
         if self.__last_date is None or self.__last_date < date:
-            prefix_str += "\n -- " + str(date.day) + "/" + str(date.month) + "/" + str(date.year) + " -- \n\n"
+            prefix_str += "\n -- " + date.strftime(Switches.date_mode.value) + " -- \n\n"
             self.__last_date = date
 
         # Timestamp
