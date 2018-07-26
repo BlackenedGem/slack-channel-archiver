@@ -30,7 +30,7 @@ def arg_setup():
                         help="Output directory to use for exports (excluding files)")
     parser.add_argument('-j', '--json', nargs='?', const='dm.json',
                         help="Output the message history in raw json form")
-    parser.add_argument('-t', '--text', nargs='?', const='dm.txt', default='dm.txt',
+    parser.add_argument('-t', '--text', nargs='?', const='dm.txt',
                         help="Output the message history in human readable form")
 
     # File args
