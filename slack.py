@@ -129,32 +129,6 @@ class Slack:
                 ret += username + ": "
             ret += "_" + self.format_msg_text(msg) + "_"
 
-        elif subtype == 'file_comment':
-            comment_username = self.get_username(msg['comment'], self.user_map)
-            ret += self.format_file_msg(msg, comment_username, "commented on")
-
-            ret += "\n" + Slack.INDENTATION_SHORT + "C: "
-            ret += msg['comment']['comment']
-            ret += "\n"
-
-        elif subtype == 'file_mention':
-            ret += self.format_file_msg(msg, username, "mentioned")
-
-        elif subtype == 'file_share':
-            # File can be null, if so then just mention
-            if msg['file'] is None:
-                return msg['text']
-
-            # Is the user uploading the file or sharing it
-            if msg['upload']:
-                ret += username + " uploaded a file: " + self.get_file_link(msg)
-                if 'initial_comment' in msg['file']:
-                    ret += " and commented on it\n"
-                    ret += Slack.INDENTATION_SHORT + "C: " + msg['file']['initial_comment']['comment']
-                    ret += "\n"
-            else:
-                ret += self.format_file_msg(msg, username, "shared")
-
         elif subtype == 'thread_broadcast':
             if self.process_channel_threads:
                 # Standard message
@@ -166,14 +140,6 @@ class Slack:
                 ret += username + " replied to a thread:\n" + Slack.INDENTATION + self.format_msg_text(msg)
 
         return ret
-
-    def format_file_msg(self, msg, username, phrase: str):
-        file_username = self.get_username(msg['file'], self.user_map)
-
-        if file_username == username:
-            return username + " " + phrase + " their file: " + self.get_file_link(msg)
-        else:
-            return username + " " + phrase + " " + file_username + "'s file: " + self.get_file_link(msg)
 
     def get_file_str(self, msg, msg_user):
         if 'files' not in msg:
