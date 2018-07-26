@@ -67,7 +67,8 @@ class Slack:
             self.__last_date = date
 
         # Timestamp
-        body_str = self.format_timestamp(timestamp)
+        timestamp_str = self.format_timestamp(timestamp)
+        body_str = ""
 
         # Get subtype and username
         subtype = None
@@ -87,12 +88,16 @@ class Slack:
         else:
             # Standard message
             if self.__last_user != username:
-                body_str = Slack.INDENTATION + username + ":\n" + body_str
+                timestamp_str = Slack.INDENTATION + username + ":\n" + timestamp_str
 
             body_str += self.format_msg_text(msg)
 
         # If message contains files then add that
-        body_str += self.get_file_str(msg)
+        file_str = self.get_file_str(msg, username)
+        if file_str != "":
+            if body_str != "":
+                body_str += "\n" + Slack.INDENTATION
+            body_str += file_str
 
         # If message contains replies, then add them as a thread
         if 'thread_ts' in msg and 'replies' in msg and len(msg['replies']) > 0:
@@ -102,7 +107,7 @@ class Slack:
         # Update last_user
         self.__last_user = username
 
-        return prefix_str + body_str
+        return prefix_str + timestamp_str + body_str
 
     def format_msg_text(self, msg, include_ampersand=True):
         ret_str = ""
@@ -170,7 +175,7 @@ class Slack:
         else:
             return username + " " + phrase + " " + file_username + "'s file: " + self.get_file_link(msg)
 
-    def get_file_str(self, msg):
+    def get_file_str(self, msg, msg_user):
         if 'files' not in msg:
             return ""
 
@@ -182,7 +187,6 @@ class Slack:
         file = files[0]
 
         # Extract info
-        msg_user = self.get_username(msg)
         file_user = self.get_username(file)
         upload = msg.get('upload', False)
         share = msg.get('is_share', False)
@@ -190,12 +194,15 @@ class Slack:
         if upload:
             ret_str = f"{msg_user} uploaded a file: "
         elif share:
-            ret_str = f"{msg_user} shared a file by {file_user}: "
+            if file_user == msg_user:
+                ret_str = f"{msg_user} shared their file: "
+            else:
+                ret_str = f"{msg_user} shared a file by {file_user}: "
         else:
             print("File found was not shared or uploaded")
             sys.exit(-1)
 
-        ret_str += file['title']
+        ret_str += "'" + file['title'] + "'"
         return ret_str
 
     @staticmethod
@@ -216,7 +223,7 @@ class Slack:
         ret_str += ">"
         return ret_str
 
-    def format_attachment(self, a):
+    def format_attachment(self, a, user):
         body_str = ""
         ret_str = ""
 
@@ -272,6 +279,10 @@ class Slack:
             else:
                 body_str += "\n\n" + Slack.INDENTATION + field_str
 
+        file_msg = self.get_file_str(a, user)
+        if file_msg != "":
+            body_str += "\n" + Slack.INDENTATION + file_msg
+
         # Denote the attachment by adding A: inline with the timestamp
         ret_str += "\n" + Slack.INDENTATION_SHORT + "A: " + body_str
 
@@ -284,7 +295,7 @@ class Slack:
             attachments = msg['attachments']
 
             for a in attachments:
-                ret_str += self.format_attachment(a)
+                ret_str += self.format_attachment(a, self.get_username(msg))
 
         # Last attachment should not add a newline, this is the easiest way to get rid of it
         if ret_str.endswith("\n"):
