@@ -146,28 +146,10 @@ class Api:
     # Returns True for error with 429 code
     @classmethod
     def get_request_once(cls, url: str, params: dict, schema: dict = None):
-        # variables
         error_msg = f"Exception with request for URL: {url}"
-        params['token'] = cls.token
-
-        # Go through obvious failure points
-        # noinspection PyBroadException
-        try:
-            response = requests.get(url, params)
-        except requests.exceptions.RequestException as e:
-            print(error_msg)
-            print(e)
-            return False
-
-        if response.status_code == 429:
-            print(error_msg)
-            print("Status code: " + str(response.status_code) + " (Too many requests)")
-            return True
-
-        if response.status_code != 200:
-            print(error_msg)
-            print("Status code: " + str(response.status_code))
-            return False
+        response = cls.request_base(url, params)
+        if not isinstance(response, requests.Response):
+            return response
 
         if response.text is None:
             print(error_msg)
@@ -194,6 +176,34 @@ class Api:
                 return False
 
         return resp_json
+
+    # Base for request.get and handling basic errors
+    @classmethod
+    def request_base(cls, url: str, params: dict, headers=None):
+        # variables
+        error_msg = f"Exception with request for URL: {url}"
+        params['token'] = cls.token
+
+        # Go through obvious failure points
+        # noinspection PyBroadException
+        try:
+            response = requests.get(url, params)
+        except requests.exceptions.RequestException as e:
+            print(error_msg)
+            print(e)
+            return False
+
+        if response.status_code == 429:
+            print(error_msg)
+            print("Status code: " + str(response.status_code) + " (Too many requests)")
+            return True
+
+        if response.status_code != 200:
+            print(error_msg)
+            print("Status code: " + str(response.status_code))
+            return False
+
+        return response
 
     @classmethod
     def get_cursor(cls, data: dict):

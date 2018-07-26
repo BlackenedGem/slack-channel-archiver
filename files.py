@@ -1,6 +1,6 @@
 import re
 import os.path
-import urllib.request
+import requests
 
 from slack import Slack
 from status import Status
@@ -19,7 +19,7 @@ class Files:
         return files
 
     @classmethod
-    def download_file(cls, file, file_dir, user_map: dict, overwrite=False):
+    def download_file(cls, token, file, file_dir, user_map: dict, overwrite=False, ):
         download_url = file['url_private_download']
 
         file_size = cls.bytes_to_str(file['size'])
@@ -36,7 +36,7 @@ class Files:
         Files.make_dirs(save_loc)
 
         print("Downloading file from '" + download_url + "' (" + file_size + ")")
-        return cls.download(download_url, save_loc, overwrite)
+        return cls.download(download_url, save_loc, overwrite, token)
 
     @staticmethod
     def bytes_to_str(size: int, precision=2):
@@ -49,7 +49,7 @@ class Files:
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
     @staticmethod
-    def download(source: str, save_loc: str, overwrite: bool):
+    def download(source: str, save_loc: str, overwrite: bool, token: str):
         if os.path.exists(save_loc):
             Status.files_already_exist += 1
 
@@ -60,9 +60,14 @@ class Files:
                 print("File already exists, overwriting")
 
         try:
-            urllib.request.urlretrieve(source, save_loc)
+            response = requests.get(source, headers={"Authorization": "Bearer " + token})
+            if not isinstance(response, requests.Response):
+                return False
+
+            with open(save_loc, "wb") as f:
+                f.write(response.content)
         except Exception as e:
-            print(e)
+            print("ERROR: " + str(e))
             return False
 
         return True

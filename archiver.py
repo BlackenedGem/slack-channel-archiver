@@ -90,7 +90,7 @@ def download_files():
     # Download files
     print("")
     for file in files:
-        success = Files.download_file(file, args.files, user_map, overwrite=args.files_overwrite)
+        success = Files.download_file(args.token, file, args.files, user_map, overwrite=args.files_overwrite)
 
         if success:
             Status.tot_files += 1
