@@ -87,6 +87,7 @@ def download_files():
     if len(files) == 0:
         return
 
+    # Download files
     print("")
     for file in files:
         success = Files.download_file(file, args.files, user_map, overwrite=args.files_overwrite)
@@ -96,7 +97,10 @@ def download_files():
         else:
             Status.file_failures += 1
 
+    # Status messages
     print("File download complete")
+    if Status.files_already_exist == 0:
+        return
     if args.files_overwrite:
         print(f"{Status.files_already_exist} files were overwritten")
     else:
