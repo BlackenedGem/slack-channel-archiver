@@ -31,8 +31,8 @@ class Files:
         file_name = re.sub('[\\\/:*?"<>|]', '', file_name)
 
         save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';', no_slashes=True)
-        save_name += f"- {file_user} - {file_name}"
-        save_loc = os.path.join(file_dir, save_name)
+        save_name += f"- {file_name}"
+        save_loc = os.path.join(file_dir, file_user, save_name)
         Files.make_dirs(save_loc)
 
         print("Downloading file from '" + download_url + "' (" + file_size + ")")
