@@ -15,6 +15,7 @@ class Api:
 
     REQUEST_COUNT_HISTORY = 500
     REQUEST_COUNT_USERS = 0
+    REQUEST_COUNT_FILES = 100
 
     # Number of times to retry and wait times (in seconds)
     TIMEOUT_RETRIES = 3
@@ -175,8 +176,38 @@ class Api:
         return messages
 
     @classmethod
-    def get_file_list(cls):
-        pass
+    def get_file_list(cls, dm, start_time: datetime, end_time: datetime):
+        page = 1
+        params = {
+            'channel': dm,
+            'count': cls.REQUEST_COUNT_FILES,
+            'ts_from': start_time.timestamp(),
+            'ts_to': end_time.timestamp()
+        }
+
+        file_list = []
+        while True:
+            # Get next page of files
+            params['page'] = page
+            print(f"Querying slack for page {page} of files between {params['oldest']} - {params['latest']}")
+            response = cls.get_request(cls.URL_FILE_LIST, params, cls.SCHEMA_FILE_LIST)
+
+            # Check that reported files matches number of file objects (because I'm paranoid)
+            files = response['files']
+            num_files = response['paging']['total']
+            if num_files != len(files):
+                print(f"Number of files found and reported by slack differ. Reported: {num_files}, given: {len(files)}")
+
+            # Add files to list
+            file_list.extend(response['files'])
+            print(f"Retrieved data about {num_files} files")
+
+            # Decide whether to continue or not
+            if num_files == 0 or response['paging']['page'] == response['paging']['pages']:
+                break
+            page += 1
+
+        return file_list
 
     # GET requests all have the same processing logic
     # Also remove requirement to send token for everything
@@ -272,5 +303,5 @@ class Api:
         return cursor
 
     @classmethod
-    def format_time(cls, time: datetime):
-        return datetime.datetime.strftime(time, Switches.date_mode.value)
+    def format_time(cls, datetime_obj: datetime):
+        return datetime.datetime.strftime(datetime_obj, Switches.date_mode.value)
