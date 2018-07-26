@@ -23,7 +23,7 @@ def arg_setup():
     parser.add_argument('-ds', '--date-start',
                         help="Earliest messages to archive (inclusive)")
     parser.add_argument('-de', '--date-end',
-                        help="Latest messages to archive (inclusive)")
+                        help="Latest messages to archive (exclusive)")
 
     # Export args
     parser.add_argument('-o', '--output', nargs='?', const='output', default='',
