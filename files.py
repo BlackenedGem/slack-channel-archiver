@@ -33,7 +33,7 @@ class Files:
         save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';', no_slashes=True)
         save_name += f"- {file_user} - {file_name}"
         save_loc = os.path.join(file_dir, save_name)
-        os.makedirs(os.path.dirname(save_loc), exist_ok=True)
+        Files.make_dirs(save_loc)
 
         print("Downloading file from '" + download_url + "' (" + file_size + ")")
         return cls.download(download_url, save_loc, overwrite)
@@ -66,3 +66,11 @@ class Files:
             return False
 
         return True
+
+    @staticmethod
+    def make_dirs(loc):
+        directory = os.path.dirname(loc)
+        if directory == "":
+            return
+
+        os.makedirs(directory, exist_ok=True)

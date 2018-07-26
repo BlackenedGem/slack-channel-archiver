@@ -67,7 +67,7 @@ def write_to_file(file: str, data):
     # Get full path and create directory if it doesn't exist
     loc = os.path.join(args.output, file)
     print(f"Saving data to {loc}")
-    os.makedirs(os.path.dirname(loc), exist_ok=True)
+    Files.make_dirs(loc)
 
     # Write to file and return true/false
     try:
