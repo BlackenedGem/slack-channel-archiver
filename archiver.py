@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import json
+import sys
 
 from switches import Switches
 from api import Api
@@ -53,7 +54,6 @@ def get_user_map():
             break
 
     return user_id_map
-
 
 def write_to_file(file: str, data):
     # Get full path and create directory if it doesn't exist
