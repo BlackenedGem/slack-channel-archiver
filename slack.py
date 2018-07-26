@@ -1,4 +1,6 @@
 import datetime
+import sys
+
 from switches import Switches
 from status import Status
 
@@ -9,9 +11,6 @@ class Slack:
                            '&gt;': '>'}
 
     SUBTYPES_CUSTOM = ('me_message',
-                       'file_comment',
-                       'file_mention',
-                       'file_share',
                        'thread_broadcast')
 
     SUBTYPES_NO_PREFIX = ('pinned_item', )
@@ -92,6 +91,9 @@ class Slack:
 
             body_str += self.format_msg_text(msg)
 
+        # If message contains files then add that
+        body_str += self.get_file_str(msg)
+
         # If message contains replies, then add them as a thread
         if 'thread_ts' in msg and 'replies' in msg and len(msg['replies']) > 0:
             body_str += "\n\n" + Slack.INDENTATION_SHORT + "T: "
@@ -167,6 +169,34 @@ class Slack:
             return username + " " + phrase + " their file: " + self.get_file_link(msg)
         else:
             return username + " " + phrase + " " + file_username + "'s file: " + self.get_file_link(msg)
+
+    def get_file_str(self, msg):
+        if 'files' not in msg:
+            return ""
+
+        # Get file object
+        files = msg['files']
+        if len(files) != 1:
+            print(f"Encountered a file array with {len(files)}, this program only expects 1")
+            sys.exit(-1)
+        file = files[0]
+
+        # Extract info
+        msg_user = self.get_username(msg)
+        file_user = self.get_username(file)
+        upload = msg.get('upload', False)
+        share = msg.get('is_share', False)
+
+        if upload:
+            ret_str = f"{msg_user} uploaded a file: "
+        elif share:
+            ret_str = f"{msg_user} shared a file by {file_user}: "
+        else:
+            print("File found was not shared or uploaded")
+            sys.exit(-1)
+
+        ret_str += file['title']
+        return ret_str
 
     @staticmethod
     def get_file_link(msg):
@@ -257,8 +287,8 @@ class Slack:
                 ret_str += self.format_attachment(a)
 
         # Last attachment should not add a newline, this is the easiest way to get rid of it
-        # if ret_str.endswith("\n"):
-        #    ret_str = ret_str[:-1]
+        if ret_str.endswith("\n"):
+            ret_str = ret_str[:-1]
 
         return ret_str
 
