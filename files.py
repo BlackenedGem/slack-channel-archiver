@@ -28,7 +28,8 @@ class Files:
         file_name = file['title']
         if not file_name.endswith(file['filetype']):
             file_name += "." + file['filetype']
-        file_name = re.sub('[\\\/:*?"<>|]', '', file_name)
+        file_name = file_name.replace(':', ';')
+        file_name = re.sub('[\\\/*?"<>|]', '', file_name)
 
         save_name = Slack.format_timestamp(file['timestamp'], full=True, min_divide_char=';', no_slashes=True)
         save_name += f"- {file_name}"
