@@ -64,7 +64,6 @@ class Api:
                         "filetype",
                         "user",
                         "size",
-                        "url_private_download",
                         "ims"
                     ]
                 }
