@@ -149,18 +149,15 @@ class Slack:
         # Extract info
         file_user = self.get_username(file, self.user_map)
         upload = msg.get('upload', False)
-        share = msg.get('is_share', False)
 
+        # Default to share
         if upload:
             ret_str = f"{msg_user} uploaded a file: "
-        elif share:
+        else:
             if file_user == msg_user:
                 ret_str = f"{msg_user} shared their file: "
             else:
                 ret_str = f"{msg_user} shared a file by {file_user}: "
-        else:
-            print("File found was not shared or uploaded")
-            sys.exit(-1)
 
         ret_str += "'" + file['title'] + "'"
         return ret_str
