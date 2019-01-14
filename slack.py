@@ -284,9 +284,8 @@ class Slack:
         return ret_str
 
     def improve_message_text(self, msg: str, include_ampersand=True):
-        # TODO Make channel mentions readable
         msg = self.improve_user_mentions(msg, include_ampersand)
-        # msg = self.__improveChannelMentions(msg)
+        self.improve_channel_mentions(msg)
 
         # Replace HTML encoded characters
         for i in Slack.SLACK_HTML_ENCODING:
@@ -325,6 +324,33 @@ class Slack:
             new_text = new_text.split("|")
             new_text = new_text[1]
             new_text = "@" + new_text
+
+            msg = msg.replace(match.group(), new_text)
+
+        return msg
+
+    def improve_channel_mentions(self, msg: str):
+        # Use regex to find channel mentions
+        # Format 1, no pipe
+        mentions = re.finditer('<#([GC])([^|>]+)>', msg)
+        for match in mentions:
+            new_text = "#"
+            conv_id = match.group()[2:-1]
+
+            if conv_id in self.conv_map:
+                new_text += self.conv_map[conv_id]
+            else:
+                new_text += conv_id
+
+            msg = msg.replace(match.group(), new_text)
+
+        # Format 2, pipe
+        mentions = re.finditer('<#([GC])([^|]+)[^>]+>', msg)
+        for match in mentions:
+            new_text = match.group()[2:-1]
+            new_text = new_text.split("|")
+            new_text = new_text[1]
+            new_text = "#" + new_text
 
             msg = msg.replace(match.group(), new_text)
 

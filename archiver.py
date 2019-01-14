@@ -70,7 +70,7 @@ def get_conversation_map():
     # Make requests until response_metadata has no cursor
     cursor = None
     while True:
-        conversations, cursor = Api.get_profiles(cursor)
+        conversations, cursor = Api.get_conversations(cursor)
 
         for conv in conversations:
             name = conv['name']
@@ -138,7 +138,7 @@ messages.reverse()
 print("")
 user_map = get_user_map()
 conversation_map = get_conversation_map()
-slack = Slack(user_map)
+slack = Slack(user_map, conversation_map)
 
 # Write to JSON
 if args.json is not None:
