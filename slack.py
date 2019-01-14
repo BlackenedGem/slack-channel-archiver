@@ -1,5 +1,6 @@
 import datetime
 import sys
+import re
 
 from switches import Switches
 from status import Status
@@ -274,10 +275,9 @@ class Slack:
 
         return ret_str
 
-    @staticmethod
-    def improve_message_text(msg: str, include_ampersand=True):
-        # TODO Make user and channel mentions readable
-        # msg = self.__improveUserMentions(msg, include_ampersand)
+    def improve_message_text(self, msg: str, include_ampersand=True):
+        # TODO Make channel mentions readable
+        msg = self.improve_user_mentions(msg, include_ampersand)
         # msg = self.__improveChannelMentions(msg)
 
         # Replace HTML encoded characters
@@ -287,6 +287,38 @@ class Slack:
         # Improve indentation (use spaces instead of tabs, I expect most people to view the data using a monospaced font)
         # At least this works for notepad and notepad++
         msg = msg.replace("\n", "\n" + Slack.INDENTATION)
+
+        return msg
+
+    def improve_user_mentions(self, msg: str, include_ampersand=True):
+        # Use regex to find user mentions
+        # Format 1, no pipe
+        mentions = re.finditer('<@U([^|>]+)>', msg)
+        for match in mentions:
+            new_text = ""
+            if include_ampersand:
+                new_text += "@"
+
+            user_id = match.group()[2:-1]
+
+            if user_id == 'SLACKBOT':
+                new_text += "Slackbot"
+            elif user_id in self.user_map:
+                new_text += self.user_map[user_id]
+            else:
+                new_text += user_id
+
+            msg = msg.replace(match.group(), new_text)
+
+        # Format 2, pipe
+        mentions = re.finditer('<@U([^|]+)[^>]+>', msg)
+        for match in mentions:
+            new_text = match.group()[2:-1]
+            new_text = new_text.split("|")
+            new_text = new_text[1]
+            new_text = "@" + new_text
+
+            msg = msg.replace(match.group(), new_text)
 
         return msg
 
