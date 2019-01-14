@@ -10,7 +10,7 @@ from switches import Switches
 class Api:
     # region Constants
     URL_FILE_LIST = "https://slack.com/api/files.list"
-    URL_HISTORY_DM = "https://slack.com/api/im.history"
+    URL_HISTORY_CONV = "https://slack.com/api/conversations.history"
     URL_USER_LIST = "https://slack.com/api/users.list"
 
     REQUEST_COUNT_HISTORY = 500
@@ -155,24 +155,23 @@ class Api:
         return response['members'], cls.get_cursor(response)
 
     @classmethod
-    def get_dm_history(cls, dm, start_time: datetime, end_time: datetime):
+    def get_conv_history(cls, conv, start_time: datetime, end_time: datetime):
         print("Retrieving messages between " + cls.format_time(start_time) + " - " + cls.format_time(end_time))
 
         params = {
-            'channel': dm,
+            'channel': conv,
             'inclusive': True,
             'oldest': start_time.timestamp(),
             'latest': end_time.timestamp(),
-            'count': cls.REQUEST_COUNT_HISTORY
         }
+
+        print(f"Querying slack for messages between {params['oldest']} - {params['latest']}")
 
         # Build up array repeatedly
         messages = []
-
         while True:
             # Get next batch of messages
-            print(f"Querying slack for messages between {params['oldest']} - {params['latest']}")
-            content = cls.get_request(cls.URL_HISTORY_DM, params, schema=cls.SCHEMA_HISTORY_DM, timeout=cls.WAIT_TIME_TIER_4)
+            content = cls.get_request(cls.URL_HISTORY_CONV, params, schema=cls.SCHEMA_HISTORY_DM, timeout=cls.WAIT_TIME_TIER_4)
 
             next_messages = content['messages']
             if len(next_messages) == 0:
@@ -190,7 +189,7 @@ class Api:
                 break
 
             print("Messages retrieved so far: " + str(len(messages)))
-            params['latest'] = next_messages[-1]['ts']
+            params['cursor'] = content['response_metadata']['next_cursor']
 
         return messages
 

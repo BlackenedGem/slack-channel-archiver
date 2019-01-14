@@ -108,7 +108,7 @@ def download_files(file_list):
 args = arg_setup()
 
 # Retrieve messages
-messages = Api.get_dm_history(args.dm, Switches.date_start, Switches.date_end)
+messages = Api.get_conv_history(args.dm, Switches.date_start, Switches.date_end)
 messages.reverse()
 
 # Get user map
