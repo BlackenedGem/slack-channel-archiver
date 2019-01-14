@@ -14,7 +14,14 @@ class Slack:
     SUBTYPES_CUSTOM = ('me_message',
                        'thread_broadcast')
 
-    SUBTYPES_NO_PREFIX = ('pinned_item', )
+    SUBTYPES_NO_PREFIX = ('channel_archive',
+                          'channel_join',
+                          'channel_leave',
+                          'channel_name',
+                          'channel_purpose',
+                          'channel_topic',
+                          'channel_unarchive',
+                          'pinned_item')
 
     ATTACHMENT_FIELDS = ('fields',
                          'subtext',
@@ -27,8 +34,9 @@ class Slack:
     CHAR_PIPE = '|'
     # endregion
 
-    def __init__(self, user_map: dict, process_threads: bool = False):
+    def __init__(self, user_map: dict, conv_map: dict, process_threads: bool = False):
         self.user_map = user_map
+        self.conv_map = conv_map
         self.__last_date = None
         self.__last_user = None
         self.thread_msgs = None
@@ -115,7 +123,7 @@ class Slack:
 
         # Plain text
         if 'text' in msg:
-            ret_str += Slack.improve_message_text(msg['text'], include_ampersand)
+            ret_str += self.improve_message_text(msg['text'], include_ampersand)
 
         # Attachments
         ret_str += self.add_attachments(msg)

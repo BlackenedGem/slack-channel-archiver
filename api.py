@@ -9,10 +9,12 @@ from switches import Switches
 
 class Api:
     # region Constants
+    URL_CONV_LIST = "https://slack.com/api/conversations.list"
     URL_FILE_LIST = "https://slack.com/api/files.list"
     URL_HISTORY_CONV = "https://slack.com/api/conversations.history"
     URL_USER_LIST = "https://slack.com/api/users.list"
 
+    REQUEST_COUNT_CONV = 0
     REQUEST_COUNT_HISTORY = 500
     REQUEST_COUNT_FILES = 100
     REQUEST_COUNT_USERS = 0
@@ -140,6 +142,36 @@ class Api:
         },
         "required": ["members"]
     }
+    SCHEMA_CONV_LIST = {
+        "type": "object",
+        "properties": {
+            "channels": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "is_im": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "name",
+                        "is_im"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "channels"
+        ]
+    }
     # endregion
     # endregion
 
@@ -147,12 +179,21 @@ class Api:
 
     @classmethod
     def get_profiles(cls, cursor=None):
-        params = {'list': cls.REQUEST_COUNT_USERS}
+        params = {'limit': cls.REQUEST_COUNT_USERS}
         if cursor is not None:
             params['cursor'] = cursor
 
         response = cls.get_request(cls.URL_USER_LIST, params, schema=cls.SCHEMA_USER_LIST, timeout=cls.WAIT_TIME_TIER_2)
         return response['members'], cls.get_cursor(response)
+
+    @classmethod
+    def get_conversations(cls, cursor=None):
+        params = {'limit': cls.REQUEST_COUNT_CONV}
+        if cursor is not None:
+            params['cursor'] = cursor
+
+        response = cls.get_request(cls.URL_CONV_LIST, params, schema=cls.SCHEMA_CONV_LIST, timeout=cls.WAIT_TIME_TIER_2)
+        return response['channels'], cls.get_cursor(response)
 
     @classmethod
     def get_conv_history(cls, conv, start_time: datetime, end_time: datetime):

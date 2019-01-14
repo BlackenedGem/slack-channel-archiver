@@ -63,6 +63,29 @@ def get_user_map():
 
     return user_id_map
 
+def get_conversation_map():
+    print("Retrieving conversation mappings")
+    conv_id_map = {}
+
+    # Make requests until response_metadata has no cursor
+    cursor = None
+    while True:
+        conversations, cursor = Api.get_profiles(cursor)
+
+        for conv in conversations:
+            name = conv['name']
+            if conv['is_im']:
+                name = "@" + name
+            else:
+                name = "#" + name
+
+            conv_id_map[conv['id']] = name
+
+        if cursor is None:
+            break
+
+    return conv_id_map
+
 def write_to_file(file: str, data):
     # Get full path and create directory if it doesn't exist
     loc = os.path.join(args.output, file)
@@ -114,6 +137,7 @@ messages.reverse()
 # Get user map
 print("")
 user_map = get_user_map()
+conversation_map = get_conversation_map()
 slack = Slack(user_map)
 
 # Write to JSON
