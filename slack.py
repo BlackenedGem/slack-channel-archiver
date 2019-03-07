@@ -385,7 +385,7 @@ class Slack:
             thread.append(child_msg)
 
         # Create a new export object to format the messages for us
-        s = Slack(self.user_map)
+        s = Slack(self.user_map, self.conv_map)
         s.process_channel_threads = True
         thread_str = s.format_messages(thread, process_children=True)
 

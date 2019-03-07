@@ -235,10 +235,11 @@ class Api:
         return messages
 
     @classmethod
-    def get_file_list(cls, dm, start_time: datetime, end_time: datetime):
+    def get_file_list(cls, channel, start_time: datetime, end_time: datetime):
         page = 1
         params = {
             'count': cls.REQUEST_COUNT_FILES,
+            'channel': channel,
             'ts_from': start_time.timestamp(),
             'ts_to': end_time.timestamp()
         }
@@ -251,17 +252,16 @@ class Api:
             print(f"Querying slack for page {page} of ALL files between {params['ts_from']} - {params['ts_to']}")
             response = cls.get_request(cls.URL_FILE_LIST, params, cls.SCHEMA_FILE_LIST)
 
-            num_files += response['paging']['count']
+            num_files += len(response['files'])
             tot_files = response['paging']['total']
             print(f"Retrieved data about {num_files}/{tot_files} files")
 
-            # Add files to list, filtering on ims
+            # Add files to list
             for file in response['files']:
-                if dm in file['ims']:
-                    file_list.append(file)
+                file_list.append(file)
 
             # Decide whether to continue or not
-            if num_files == 0 or response['paging']['page'] == response['paging']['pages']:
+            if num_files == 0 or response['paging']['page'] >= response['paging']['pages']:
                 break
             page += 1
 
