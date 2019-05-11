@@ -7,18 +7,6 @@ from status import Status
 
 class Files:
     @classmethod
-    def get_files(cls, messages):
-        files = []
-
-        for msg in messages:
-            file = Slack.get_file_obj_from_msg(msg)
-
-            if file is not None:
-                files.append(file)
-
-        return files
-
-    @classmethod
     def download_file(cls, token, file, file_dir, user_map: dict, overwrite=False, ):
         download_url = file['url_private_download']
 

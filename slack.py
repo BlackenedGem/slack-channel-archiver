@@ -151,39 +151,42 @@ class Slack:
         return ret
 
     def get_file_str(self, msg, msg_user):
-        file = self.get_file_obj_from_msg(msg)
-        if file is None:
+        files = self.get_file_objs_from_msg(msg)
+        if files is None:
             return ""
 
         # Extract info
-        file_user = self.get_username(file, self.user_map)
-        upload = msg.get('upload', False)
+        ret_str = []
 
-        # Default to share
-        if upload:
-            ret_str = f"{msg_user} uploaded a file: "
-        else:
-            if file_user == msg_user:
-                ret_str = f"{msg_user} shared their file: "
+        for file in files:
+            file_user = self.get_username(file, self.user_map)
+            upload = msg.get('upload', False)
+
+            # Default to share
+            if upload:
+                file_str = f"{msg_user} uploaded a file: "
             else:
-                ret_str = f"{msg_user} shared a file by {file_user}: "
+                if file_user == msg_user:
+                    file_str = f"{msg_user} shared their file: "
+                else:
+                    file_str = f"{msg_user} shared a file by {file_user}: "
 
-        ret_str += "'" + file['title'] + "'"
-        return ret_str
+            file_str += "'" + file['title'] + "'"
+            ret_str.append(file_str)
+
+        return ("\n" + Slack.INDENTATION).join(ret_str)
 
     @staticmethod
-    def get_file_obj_from_msg(msg):
+    def get_file_objs_from_msg(msg):
         if 'files' not in msg:
             return None
 
         # Get file object
         files = msg['files']
         if len(files) != 1:
-            print(f"Encountered a file array with {len(files)}, this program only expects 1")
-            sys.exit(-1)
-        file = files[0]
+            print(f"Encountered a file array with {len(files)} files, this support is experimental")
 
-        return file
+        return files
 
     @staticmethod
     def get_file_link(msg):
