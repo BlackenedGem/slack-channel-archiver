@@ -171,7 +171,12 @@ class Slack:
                 else:
                     file_str = f"{msg_user} shared a file by {file_user}: "
 
-            file_str += "'" + file['title'] + "'"
+            if file['mode'] == "tombstone":
+                file_str += "File deleted"
+            elif file.get('title', "") == "":
+                file_str += "No title given"
+            else:
+                file_str += "'" + file['title'] + "'"
             ret_str.append(file_str)
 
         return ("\n" + Slack.INDENTATION).join(ret_str)
